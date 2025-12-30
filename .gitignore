@@ -10,6 +10,7 @@ docker-compose.override.yml
 /prowlarr
 /lidarr
 /bazarr
+/huntarr
 /qbittorrent
 /pia
 /gluetun
@@ -21,6 +22,8 @@ docker-compose.override.yml
 /adguardhome/work
 /sabnzbd
 /calibre-web
-/cleanuparr/*
+/cleanuparr
+/cross-seed
+/autobrr
 !/cleanuparr/blacklist.json
 !/cleanuparr/logs/.gitkeep
