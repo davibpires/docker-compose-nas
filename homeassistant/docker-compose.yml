@@ -34,6 +34,7 @@ services:
       - homepage.widget.key=${HOMEASSISTANT_ACCESS_TOKEN}
     profiles:
       - homeassistant
+
   mosquitto:
     container_name: mosquitto
     image: public.ecr.aws/docker/library/eclipse-mosquitto:latest
@@ -69,6 +70,7 @@ services:
       retries: 3
     profiles:
       - mqtt
+
   homeassistant-backup:
     image: ghcr.io/adrienpoupa/rclone-backup:latest
     container_name: homeassistant-backup
