@@ -139,7 +139,7 @@ services:
       - PGID=${GROUP_ID}
       - TZ=${TIMEZONE}
     volumes:
-      - ${CONFIG_ROOT:-.}/bazarr/config:/config
+      - ${CONFIG_ROOT:-.}/bazarr:/config
       - ${DATA_ROOT}:/data
     restart: always
     healthcheck:
@@ -172,14 +172,7 @@ services:
       - ${CONFIG_ROOT:-.}/jellyseerr:/app/config
     restart: always
     healthcheck:
-      test:
-        [
-          "CMD",
-          "wget",
-          "http://127.0.0.1:5055/api/v1/status",
-          "-qO",
-          "/dev/null",
-        ]
+      test: ["CMD", "wget", "http://127.0.0.1:5055/api/v1/status", "-qO", "/dev/null"]
       interval: 1m
       retries: 10
     labels:
