@@ -5,10 +5,12 @@ docker-compose.override.yml
 /homepage/*.yaml
 /homepage/*.css
 /homepage/*.js
+/traefik/certs/
 /sonarr
 /radarr
 /prowlarr
 /lidarr
+/navidrome
 /bazarr
 /huntarr
 /qbittorrent
@@ -16,7 +18,9 @@ docker-compose.override.yml
 /gluetun
 /pia-shared
 /letsencrypt
-/jellyseerr
+/seerr
+/slskd
+/soulbeet
 /adguardhome/certs
 /adguardhome/conf
 /adguardhome/work

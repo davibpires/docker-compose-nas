@@ -44,20 +44,14 @@ services:
       - ./adguardhome/conf:/opt/adguardhome/conf
       - ./adguardhome/certs:/opt/adguardhome/certs
     labels:
-      - "traefik.enable=true"
-      - "traefik.docker.network=nas"
-      - "traefik.http.services.adguardhome.loadbalancer.server.port=3000"
-      - "traefik.http.routers.adguardhome.rule=(Host(`${ADGUARD_HOSTNAME}`))"
-      - "traefik.http.routers.adguardhome.tls=true"
-      - "traefik.http.routers.adguardhome.tls.certresolver=myresolver"
       - homepage.group=Utilities
       - homepage.name=Adguard
       - homepage.icon=adguard-home.png
-      - homepage.href=https://${ADGUARD_HOSTNAME}
+      # - homepage.href=https://${ADGUARD_HOSTNAME}
       - homepage.description=DNS Adblocker
       - homepage.weight=0
       - homepage.widget.type=adguard
-      - homepage.widget.url=https://${ADGUARD_HOSTNAME}
+      # - homepage.widget.url=https://${ADGUARD_HOSTNAME}
       - homepage.widget.username=${ADGUARD_USERNAME}
       - homepage.widget.password=${ADGUARD_PASSWORD}
     profiles:

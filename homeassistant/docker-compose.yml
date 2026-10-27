@@ -2,86 +2,88 @@ services:
   homeassistant:
     image: ghcr.io/home-assistant/home-assistant:stable
     container_name: homeassistant
+    restart: always
     network_mode: host
-    environment:
-      - PUID=${USER_ID}
-      - PGID=${GROUP_ID}
-      - TZ=${TIMEZONE}
+    privileged: true
     volumes:
       - ${CONFIG_ROOT:-.}/homeassistant:/config
       - /etc/localtime:/etc/localtime:ro
       - /run/dbus:/run/dbus:ro
-    restart: always
+    environment:
+      - PUID=${USER_ID}
+      - PGID=${GROUP_ID}
+      - TZ=${TIMEZONE}
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://127.0.0.1:8123"]
       interval: 1m
       retries: 10
-    privileged: true
     labels:
-      - traefik.enable=true
-      - traefik.http.routers.homeassistant.rule=(Host(`${HOMEASSISTANT_HOSTNAME}`))
-      - traefik.http.routers.homeassistant.tls=true
-      - traefik.http.routers.homeassistant.tls.certresolver=myresolver
-      - traefik.http.services.homeassistant.loadbalancer.server.port=8123
       - homepage.group=Apps
       - homepage.name=Home Assistant
       - homepage.icon=home-assistant.png
-      - homepage.href=https://${HOMEASSISTANT_HOSTNAME}
-      - homepage.description=Open source home automation that puts local control and privacy first
+      - homepage.href=http://${SERVER_IP}:8123
+      - homepage.description=Smart home controller
       - homepage.weight=3
       - homepage.widget.type=homeassistant
-      - homepage.widget.url=https://${HOMEASSISTANT_HOSTNAME}
+      - homepage.widget.url=http://${SERVER_IP}:8123
       - homepage.widget.key=${HOMEASSISTANT_ACCESS_TOKEN}
     profiles:
       - homeassistant
 
   mosquitto:
-    container_name: mosquitto
     image: public.ecr.aws/docker/library/eclipse-mosquitto:latest
-    restart: always
+    container_name: mosquitto
+    restart: unless-stopped
     user: ${USER_ID}:${GROUP_ID}
-    environment:
-      - PUID=${USER_ID}
-      - PGID=${GROUP_ID}
+    ports:
+      - "1883:1883"
     volumes:
       - ${CONFIG_ROOT:-.}/homeassistant/mosquitto/config:/mosquitto/config
       - ${CONFIG_ROOT:-.}/homeassistant/mosquitto/data:/mosquitto/data
       - ${CONFIG_ROOT:-.}/homeassistant/mosquitto/log:/mosquitto/log
-    ports:
-      - "1883:1883"
+    environment:
+      - PUID=${USER_ID}
+      - PGID=${GROUP_ID}
     healthcheck:
       test:
-        [
-          "CMD",
-          "mosquitto_sub",
-          "-p",
-          "1880",
-          "-t",
-          "$$SYS/#",
-          "-C",
-          "1",
-          "-i",
-          "healthcheck",
-          "-W",
-          "3",
-        ]
+        ["CMD", "mosquitto_sub", "-p", "1880", "-t", "$$SYS/#", "-C", "1", "-i", "healthcheck", "-W", "3"]
       interval: 1m
       timeout: 10s
       retries: 3
     profiles:
       - mqtt
 
-  homeassistant-backup:
-    image: ghcr.io/adrienpoupa/rclone-backup:latest
-    container_name: homeassistant-backup
-    restart: always
-    env_file:
-      - ${CONFIG_ROOT:-.}/homeassistant/backup.env
-    environment:
-      - BACKUP_FOLDER_NAME=backups
-      - BACKUP_FOLDER_PATH=/backups
+  zigbee2mqtt:
+    image: koenkk/zigbee2mqtt:latest
+    container_name: zigbee2mqtt
+    restart: unless-stopped
+    depends_on:
+      - mosquitto
+    ports:
+      - "8099:8080"
     volumes:
-      - ${CONFIG_ROOT:-.}/homeassistant/backups:/backups
-      - ${CONFIG_ROOT:-.}/homeassistant/backup:/config
+      - ${CONFIG_ROOT:-.}/homeassistant/zigbee2mqtt/data:/app/data
+      - /run/udev:/run/udev:ro
+    devices:
+      - /dev/serial/by-id/usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus_22d71a94778aef11a49a22ccef8776e9-if00-port0:/dev/ttyUSB0
+    group_add:
+      - dialout
+    environment:
+      - TZ=${TIMEZONE}
     profiles:
-      - homeassistant
+      - zigbee
+
+  # homeassistant-backup:
+  #   image: ghcr.io/adrienpoupa/rclone-backup:latest
+  #   container_name: homeassistant-backup
+  #   restart: always
+  #   env_file:
+  #     - ${CONFIG_ROOT:-.}/homeassistant/backup.env
+  #   environment:
+  #     - BACKUP_FOLDER_NAME=backups
+  #     - BACKUP_FOLDER_PATH=/backups
+  #   volumes:
+  #     - ${CONFIG_ROOT:-.}/homeassistant/backups:/backups
+  #     - ${CONFIG_ROOT:-.}/homeassistant/backup:/config
+  #   profiles:
+  #     - homeassistant
